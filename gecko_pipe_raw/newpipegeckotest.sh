@@ -51,9 +51,10 @@ distance=(6 7)
 post_gecko_path=$path_where_your_scrips_are/gckresultsanalysis.py
 ######################################################################
 ######## Plot 
-#must have R installed with ggplot2 
-plot_path=$path_where_your_scrips_are/plotstuffnew.R
-plot_path_2=$path_where_your_scrips_are/newplotforclusts.R
+###must have R installed with ggplot2
+#plot_path=$path_where_your_scrips_are/plotstuffnew.R
+#plot_path_2=$path_where_your_scrips_are/newplotforclusts.R
+plot_path_3=/homes/castillo/Desktop/castillo/PycharmProjects/plot2dhisto/plot2dh.py
 ######################################################################
 ######## Reported clusters data 
 reported_clust_path=/homes/castillo/Desktop/castillo/reportedclustersupdt_verified/
@@ -190,7 +191,8 @@ then
 
 		if  [ $plot_enable  -eq 1 ]
 		then
-			$plot_path gckoeggout_summary
+			#$plot_path gckoeggout_summary
+			python $plot_path_3 gckoeggout2_summary plotty
 		fi
 fi
 if [ $portho_enable  -eq 1 ]
@@ -207,8 +209,9 @@ then
 
 		if  [ $plot_enable  -eq 1 ]
 		then
-			Rscript $plot_path gckoporthoout_summary
-			Rscript $plot_path_2 gckoporthoout_summary
+			#Rscript $plot_path gckoporthoout_summary
+			#Rscript $plot_path_2 gckoporthoout_summary
+			python $plot_path_3 gckoeggout2_summary plotty
 		fi
 fi
 

@@ -32,8 +32,9 @@ summ_maker=/homes/castillo/Desktop/castillo/PycharmProjects/aftergeneteamsnodom/
 
 ######## Plot 
 #must have R installed with ggplot2 
-plot_path=$path_where_your_scrips_are/plotstuffnew.R
-plot_path_2=$path_where_your_scrips_are/newplotforclusts.R
+#plot_path=$path_where_your_scrips_are/plotstuffnew.R
+#plot_path_2=$path_where_your_scrips_are/newplotforclusts.R
+plot_path_3=/homes/castillo/Desktop/castillo/PycharmProjects/plot2dhisto/plot2dh.py
 ######################################################################
 ######## Reported clusters data 
 #you have to update the clusters for this shit
@@ -107,7 +108,8 @@ fi
 
 if  [ $plot_enable  -eq 1 ]
 then
-	Rscript $plot_path $summary_output
-	Rscript $plot_path_2 $summary_output
+	#Rscript $plot_path $summary_output
+	#Rscript $plot_path_2 $summary_output
+	python $plot_path_3 gckoeggout2_summary plotty
 fi
 

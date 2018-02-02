@@ -49,8 +49,9 @@ output_summary_name="ffgcdomout_summary"
 ######################################################################
 ######## Plot 
 #must have R installed with ggplot2 
-plot_path=$path_where_your_scrips_are/plotstuffnew.R
-plot_path_2=$path_where_your_scrips_are/newplotforclusts.R
+#plot_path=$path_where_your_scrips_are/plotstuffnew.R
+#plot_path_2=$path_where_your_scrips_are/newplotforclusts.R
+plot_path_3=/homes/castillo/Desktop/castillo/PycharmProjects/plot2dhisto/plot2dh.py
 ######################################################################
 ######## Reported clusters data 
 reported_clust_path=/homes/castillo/Desktop/castillo/reportedclusters2017_fit/
@@ -173,8 +174,9 @@ fi
 
 if  [ $plot_enable  -eq 1 ]
 then
-	Rscript $plot_path $output_summary_name
-	Rscript $plot_path_2 $output_summary_name
+	#Rscript $plot_path $output_summary_name
+	#Rscript $plot_path_2 $output_summary_name
+	python $plot_path_3 gckoeggout2_summary plotty
 fi
 
 
