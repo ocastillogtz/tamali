@@ -1,0 +1,59 @@
+#!/bin/bash
+########################
+
+#################################################Check for the .cluster files
+#check if there are no parameters
+echo "Starting cluster files check and update"
+if [ $# -eq 0 ]  
+	then
+	echo "Default folder is actual folder"
+	folder=$(echo "$PWD/dataset/")
+	echo $folder 
+
+	elif [ -z "$1" ]
+		then 
+			echo "no genome target folder supplied"		
+		else
+			folder=$1
+			echo "genome containing folder: $folder"
+				
+fi
+cd $folder
+
+
+### Get the names of the fasta files
+genomes=$(ls -1 | rev | grep -oP '^sog\.\K.*' | rev | tr '\n' ';') 
+
+IFS=";" read -r -a genome_array <<< "$genomes"
+
+##substituting * for X |||| substituting - for _ in the fasta files
+for index in "${!genome_array[@]}"
+do
+	echo "$index ${genome_array[index]}"
+	if [ ! -f "${genome_array[index]}.fastab" ] 
+	then
+		
+		#echo -n "" > ${genome_array[index]}.fasta
+		while IFS='' read -r line || [[ -n "$line" ]]; do
+		echo $line | grep -qP '^>'   
+		if [[ $? -eq 0 ]]	
+		then
+			IFS='|' tokens=( $line )
+			protein_pro=${tokens[1]}
+			gene=${tokens[3]}
+			location=${tokens[4]}
+			IFS=':' location_array=( $location )
+			location_a=${location_array[0]}
+			location_b=${location_array[1]}
+			chromo=${tokens[6]}
+			strand=${tokens[8]}
+			echo "$protein_pro	$gene	NaN	$chromo	$location_a	$location_b	$strand" >> ${genome_array[index]}.fastab
+		fi
+		done < "${genome_array[index]}.gos"
+	else
+		echo "already exists"
+	fi
+done
+
+echo "Finished gos to fastab conversion"
+

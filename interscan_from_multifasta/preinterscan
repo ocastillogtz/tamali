@@ -1,0 +1,54 @@
+#!/bin/bash
+
+#check if there are no parameters
+
+echo "preparing multifastas for interproscan"
+if [ $# -eq 0 ]  
+	then
+	echo "wrong arguments, 1: genome folder"
+	exit 1
+
+	elif [ -z "$1" ]
+		then 
+			echo "no genome target folder supplied"		
+		else
+			folder=$1
+			echo "genome containing folder: $folder"	
+fi
+
+if [ -z "$2" ]
+then
+echo "Second argument should be the path to interproscan.sh"
+exit 1
+else
+echo "interproscan path: $2"
+interpro=$2
+fi  
+
+
+cd $folder
+
+### Get the names of the fasta files
+genomes=$(ls -1 | rev | grep -oP '^sog\.\K.*' | rev | tr '\n' ';') 
+
+IFS=";" read -r -a genome_array <<< "$genomes"
+
+##substituting * for X |||| substituting - for _ in the fasta files
+for index in "${!genome_array[@]}"
+do
+	echo "$index ${genome_array[index]}"
+	sed 's/*/X/g' "${genome_array[index]}.gos" | awk -vRS=">gb" '{$0=n$0;ORS=RT}++n' > "${genome_array[index]}.fa"
+
+	qsub -cwd -o "interpro_${genome_array[index]}.log" -V -j y -pe multislot 8 -l vf=6G -l idle=1 -P fair_share -b y $interpro -iprlookup -appl Pfam -i "${genome_array[index]}.fa" -f tsv -b "${genome_array[index]}.pfam"
+
+	
+
+done
+
+
+
+
+
+
+
+

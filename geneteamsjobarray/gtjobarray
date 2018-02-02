@@ -1,0 +1,70 @@
+#!/bin/bash
+# Tell the SGE that this is an array job, with "tasks" to be numbered 1 to 10000
+######## Gene teams
+#quorum_combinations=/homes/castillo/Desktop/castillo/A_gteams_domain/filepathlistsquorum
+gene_teams_script=/homes/castillo/Desktop/castillo/GraphTeams/scripts/graph_teams_mod01.py
+quorum_combinations=$(grep -oP 'quorum_combinations=\K.*' parametersgeneteams)
+
+distance_str=$(grep -oP 'distance=\K.*' parametersgeneteams)
+distance=( $distance_str )
+
+quorum_str=$(grep -oP 'quorum=\K.*' parametersgeneteams)
+quorum=( $quorum_str )
+
+echo "Distance/Indels:"
+echo ${distance[*]}
+echo "Quorum:"
+echo ${quorum[*]}
+
+	#find graph files
+	files=$(ls -lrt -d -1 $actual_path/{*,.*} | awk '{print $9}' | rev | grep -oP 'lmg\..*' | rev | tr '\n' ' ')
+	
+	qu=0
+	di=0
+	for qu in "${!quorum[@]}"
+	do
+		for di in "${!distance[@]}"
+		do
+			qu_a=${quorum[qu]}
+			di_a=${distance[di]}
+			IFS=$'\n'
+			quorum_combi_entries=( $(grep -oP "^$qu_a\t\K.*" $quorum_combinations) ) 
+
+			for combi in ${!quorum_combi_entries[@]}
+			do
+				qcombi=${quorum_combi_entries[combi]}
+				submittions+=("python $gene_teams_script -d $di_a $qcombi ")
+			done	
+		done
+	done
+
+	#for indice_1 in "${!submittions[@]}"
+	#do
+	#	echo ${submittions[indice_1]}
+	#done
+IFS=$' \t\n'
+	
+indice_shido=$(expr $SGE_TASK_ID - 1)
+
+submi_thing=${submittions[$indice_shido]}
+
+DATE=`date '+%Y-%m-%d %H:%M:%S'`
+
+cd geneteamoutputs
+
+echo "$DATE::$submi_thing" >> outputranlog.log
+
+eval $submi_thing 
+
+
+
+
+
+
+
+
+
+
+
+
+

@@ -1,0 +1,8 @@
+#!/bin/bash
+
+
+cat gckoeggout2_summary.part_* > gckoeggout2_summary
+
+sed -i.bak '/quorum	minclust	indels	ref_clust_id	cluster_size_ref	found_clust_id	cluster_size_found	jaccard	hit_50%	hit_70%	hit_100%	reference_clust	computed_clust	other_genomes	other_clusters_included/d' gckoeggout2_summary
+	
+sed -i '1 i\quorum	minclust	indels	ref_clust_id	cluster_size_ref	found_clust_id	cluster_size_found	jaccard	hit_50%	hit_70%	hit_100%	reference_clust	computed_clust	other_genomes	other_clusters_included' gckoeggout2_summary

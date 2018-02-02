@@ -1,0 +1,79 @@
+#!/bin/bash
+
+#check if there are no parameters
+
+echo "Preparing submittions for post gecko domains"
+if [ $# -eq 0 ]  
+	then
+	echo "wrong arguments, 1: genome files folder"
+	exit 1
+
+	elif [ -z "$1" ]
+		then 
+			echo "no folder where genome files are, supplied"		
+		else
+			folder=$1
+			echo "Folder containing genome files: $folder"	
+fi
+
+if [ -z "$2" ]
+then
+echo "Second argument should the path to cluster files"
+exit 1
+else
+echo "Path to cluster files: $2"
+cluster_files=$2
+fi  
+
+if [ -z "$3" ]
+then
+echo "Third argument should the python script for this task"
+exit 1
+else
+echo "post gecko domains script: $3"
+postgeckodomain=$3
+fi  
+
+if [ -z "$4" ]
+then
+echo "Third argument should the python script for this task"
+exit 1
+else
+echo "post gecko domains script: $4"
+outputname=$4
+fi 
+
+actual_folder=$(pwd)
+
+cd $cluster_files
+
+### Get the names of the cluster files
+##genomes=$(ls -1 | rev | grep -oP '^retsulc\.\K.*' | rev | tr '\n' ';') 
+
+genomes=$(ls -l | grep -oP '\w+\.\w+\.cluster' | tr '\n' ';') 
+
+
+IFS=";" read -r -a genome_array <<< "$genomes"
+
+cd $actual_folder
+
+
+##substituting * for X |||| substituting - for _ in the fasta files
+for index in "${!genome_array[@]}"
+do
+	echo "$index cluster_files/${genome_array[index]}"
+
+	echo "Submitted thing: python $postgeckodomain $actual_folder $cluster_files/${genome_array[index]} $folder $outputname $index"
+
+	###qsub -cwd -o "postgeckodomains_${genome_array[index]}.log" -V -j y -pe multislot 8 -l vf=6G -l idle=1 -P fair_share -b y $interpro -iprlookup -appl Pfam -i "${genome_array[index]}.fa" -f tsv -b "${genome_array[index]}.pfam"
+
+	qsub -cwd -o "postgeckodomains_${genome_array[index]}.log" -V -j y -pe multislot 2 -l vf=6G -l idle=1 -P fair_share -b y python $postgeckodomain $actual_folder "$cluster_files/${genome_array[index]}" $folder $outputname $index  
+
+done
+
+
+        #print "Argument 1: You must provide the directory path which contains the gck files"
+        #print "Argument 2: You must provide the directory path which contains the cluster files"
+        #print "Argument 3: You must provide the directory path which contains the geckable files"
+        #print "Argument 4: You must provide a name for the output file"
+        #print "Argument 5: You must provide the cluster file name enumeration"

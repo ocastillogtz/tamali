@@ -1,0 +1,78 @@
+#!/bin/bash
+
+echo "Starting computing proteinortho(protein orthology clusters aka families)"
+if [ $# -eq 0 ]  
+	then
+	folder=$(echo "$PWD/dataset/")
+	if [ ! -d "$folder" ]; then
+  		# Control will enter here if $DIRECTORY doesn't exist.
+		exit 1
+	fi
+	echo "Default folder is actual folder"
+	
+	echo $folder 
+
+	elif [ -z "$1" ]
+		then 
+			echo "no genome target folder supplied"		
+			exit 1
+		else
+			folder=$1
+			echo "genome containing folder: $folder"
+				
+fi
+
+if [ -z "$2" ]
+then
+echo "Second argument should be the path for the proteinortho tool"
+exit 1
+else
+echo "Proteinortho is in: $2"
+proteinortho=$2
+fi  
+
+if [ -z "$3" ]
+then
+echo "third argument should be e value"
+exit 1
+else
+echo "Evalue: $3"
+eval=$3
+fi  
+
+cd $folder
+
+
+echo "current folder"
+echo $PWD
+
+if [  -f familiesportho ]
+then
+	echo "familiesportho already exists"
+else
+
+	### Get the names of the fasta files
+	genomes=$(ls -1 | rev | grep -oP '^sog\.\K.*' | rev | tr '\n' ';') 
+
+	IFS=";" read -r -a genome_array <<< "$genomes"
+
+	##substituting * for X |||| substituting - for _ in the fasta files
+	for index in "${!genome_array[@]}"
+	do
+		echo "$index ${genome_array[index]}"
+		sed 's/*/X/g' "${genome_array[index]}.gos" | sed 's/-/X/g'  | awk -vRS=">gb" '{$0=n$0;ORS=RT}++n' > "${genome_array[index]}.faa"
+
+	done
+
+
+	files=$(ls -lrt -d -1 $folder/{*,.*} | awk '{print $9}' | rev | grep -oP 'aaf\..*' | rev | tr '\n' ' ')
+
+	echo $files
+
+	$proteinortho -e=$eval -p=blastp+ -cpus=6  -project=$folder $files 
+
+	cd ..	 
+
+	cat genomes.proteinortho |  awk  '{OFS="\t"}{FS="\t"}{$1=i++ FS $1;}1' > "$folder/familiesportho"
+
+fi

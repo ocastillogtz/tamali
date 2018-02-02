@@ -1,0 +1,100 @@
+#!/bin/bash
+#genomes retrieved from> ftp://ftp.ensemblgenomes.org/pub/protists/release-34/fasta/   the fasta pep file 
+
+
+
+#################################################Check for the .fa files
+#check if there are no parameters
+
+echo "Mapping the eggnog families with hmmer"
+if [ $# -eq 0 ]  
+	then
+	echo "wrong arguments, 1: genome folder, 2: hmm files folder, 3: Final hmmer file name"
+	exit 1
+
+	elif [ -z "$1" ]
+		then 
+			echo "no genome target folder supplied"		
+		else
+			folder=$1
+			echo "genome containing folder: $folder"	
+fi
+
+if [ -z "$2" ]
+then
+echo "Second argument should be the path for the folder with the hmm file"
+exit 1
+else
+echo "Folder with hmm profile: $2"
+HMM_folder=$2
+fi  
+
+if [ -z "$3" ]
+then
+echo "Third argument should be the name of the full hmmer file"
+exit 1
+else
+echo "Name of the hmm profile: $3"
+HMM_name=$3
+fi  
+
+if [ -z "$4" ]
+then
+echo "Fourth argument should be the e value cut off"
+exit 1
+else
+echo "Evalue: $4"
+eval=$4
+fi  
+
+cd $HMM_folder
+
+if [ ! -d "$gos_file_folder_name" ]; then
+	cat *.hmm > "$3.hmmer"
+	hmmpress "$3.hmmer"
+else
+	echo "The hmmer file already exists"
+fi
+
+cd $folder
+
+### Get the names of the fasta files
+genomes=$(ls -1 | rev | grep -oP '^sog\.\K.*' | rev | tr '\n' ';') 
+
+IFS=";" read -r -a genome_array <<< "$genomes"
+
+##substituting * for X |||| substituting - for _ in the fasta files
+for index in "${!genome_array[@]}"
+do
+	echo "$index ${genome_array[index]}"
+	sed 's/*/X/g' "${genome_array[index]}.gos" | awk -vRS=">gb" '{$0=n$0;ORS=RT}++n' > "${genome_array[index]}.fa"
+
+done
+
+cd ..
+    #Download all HMM models for your target taxonomic level. For instance, if Bacteria, download them from http://eggnogdb.embl.de/download/eggnog_4.5/data/bactNOG/
+    #Build a HMMER database using hmmpress. For this, you will need to concatenate all models in a single file (i.e. cat bactNOG_hmm/*.hmm > bactDB.hmmer), and run hmmpress bactDB.hmmer.
+    #Use hmmscan to query your sequences against the database.For instance: hmmscan bactDB.hmmer MyQueryFasta.fa
+
+index=0
+for index in "${!genome_array[@]}"
+do
+	>&2 echo "$index: ${genome_array[index]}.eggnogfam"
+	
+	if [ ! -f "$folder/${genome_array[index]}.eggnogfam" ] 
+	then
+		##hmmscan --cpu 12 --noali --tblout "$PWD/dataset/${genome_array[index]}.eggnogfam" -E 1e-5  "my_protist.hmmer" "$PWD/dataset/${genome_array[index]}.fa" 
+		qsub -cwd -o "$folder/${genome_array[index]}.log" -V -j y -pe multislot 12 -l vf=6G -l idle=1 -P fair_share -b y hmmscan --cpu 12 --noali --tblout "$folder/${genome_array[index]}.eggnogfam" -E $eval  "$2/$3.hmmer" "$folder/${genome_array[index]}.fa" 
+		# qsub -cwd -o test.out -e test.err -pe multislot 1 -l vf=2G -l idle=1 -P fair_share -b y ls -a /homes/castillo/
+	else
+		echo "Eggnogfam file already exists"
+	fi
+	
+	
+done
+
+until [ -f "$folder/${genome_array[index]}.eggnogfam" ]
+do
+     sleep 3600
+done
+
